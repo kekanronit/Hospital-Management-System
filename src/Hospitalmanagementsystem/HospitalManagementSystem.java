@@ -27,6 +27,7 @@ public class HospitalManagementSystem {
 
             Patient patient = new Patient(connection, scanner);
             Doctor doctor = new Doctor(connection);
+            DoctorAvailability doctorAvailability = new DoctorAvailability(connection, scanner);
 
             while (true) {
 
@@ -39,6 +40,14 @@ public class HospitalManagementSystem {
                 System.out.println("6. View Doctors");
                 System.out.println("7. Get Appointment");
                 System.out.println("8. Exit");
+                System.out.println("9. View doctor availability");
+                System.out.println("10. Add doctor availability");
+                System.out.println("11. Update doctor availability");
+                System.out.println("12. Delete doctor availability");
+                System.out.println("13. View Appointment");
+                System.out.println("14. cancel Appointment");
+                System.out.println("15. Reshedule Appointment");
+                System.out.println("16. Appointment History");
 
                 System.out.println("Enter your choice:");
                 int choice = scanner.nextInt();
@@ -82,10 +91,34 @@ public class HospitalManagementSystem {
                         System.out.println(
                                 "Thank you for using Hospital Management System."
                         );
+                    case 9:
+                        doctorAvailability.viewAvailability();
+                        break;
+                    case 10:
+                        doctorAvailability.addAvailability();
+                        break;
+                    case 11:
+                        doctorAvailability.updateAvailability();
+                        break;
+                    case 12:
+                        doctorAvailability.deleteAvailability();
+                        break;
+                    case 13:
+                        bookAppointment.viewAppointment(connection);
+                        break;
+                    case 14:
+                        bookAppointment.cancelAppointment(connection, scanner);
+                        break;
+                    case 15:
+                        bookAppointment.rescheduleAppointment(connection, scanner);
+                        break;
+                    case 16:
+                        bookAppointment.appointmentHistory(connection);
+                        break;
 
-                        connection.close();
-                        scanner.close();
-                        return;
+//                        connection.close();
+//                        scanner.close();
+//                        return;
 
                     default:
                         System.out.println("Invalid choice. Please try again.");
