@@ -11,6 +11,7 @@ public class HospitalManagementSystem {
     private static final String username = "root";
     private static final String password = System.getenv("DB_PASSWORD");
 
+
     public static void main(String[] args) {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");

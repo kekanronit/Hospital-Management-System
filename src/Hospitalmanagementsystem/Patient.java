@@ -1,7 +1,5 @@
 package Hospitalmanagementsystem;
 
-import com.mysql.cj.x.protobuf.MysqlxCrud;
-
 import java.sql.*;
 import java.util.Scanner;
 
@@ -19,20 +17,76 @@ public class Patient {
 
 
     public void addPatient(){
-        System.out.println("Enter patient name");
-        String name = scanner.next();
-        System.out.println("Enter patient age");
-        int age = scanner.nextInt();
-        System.out.println("Enter patient Gender");
-        String gender = scanner.next();
+
+        String name;
+
+        while (true) {
+
+            System.out.println("Enter patient name:");
+            name = scanner.next();
+
+            if (name.matches("[a-zA-Z]+")) {
+                break;
+            }
+
+            System.out.println("Invalid name. Please enter alphabets only.");
+        }
+
+
+        int age;
+
+        while (true) {
+
+            System.out.println("Enter patient age:");
+
+            if (scanner.hasNextInt()) {
+
+                age = scanner.nextInt();
+
+                if (age > 0 && age <= 120) {
+                    break;
+                }
+
+                System.out.println("Invalid age. Age must be between 1 and 120.");
+
+            } else {
+
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+            }
+        }
+
+
+        String gender;
+
+        while (true) {
+
+            System.out.println("Enter patient gender:");
+            gender = scanner.next();
+
+            if (gender.equalsIgnoreCase("Male")
+                    || gender.equalsIgnoreCase("Female")
+                    || gender.equalsIgnoreCase("Other")) {
+
+                break;
+            }
+
+            System.out.println(
+                    "Invalid gender. Please enter Male, Female, or Other."
+            );
+        }
 
         try {
             String query = "Insert INTO patients(name, age , gender) VALUES(?, ? ,?)";
+
             PreparedStatement preparedStatement = connection.prepareStatement(query);
+
             preparedStatement.setString(1, name);
             preparedStatement.setInt(2, age);
             preparedStatement.setString(3, gender);
+
             int affectedRows = preparedStatement.executeUpdate();
+
             if(affectedRows>0){
                 System.out.println("Patient added succesfully");
             }else{
@@ -47,32 +101,84 @@ public class Patient {
     }
 
     public void viewPatient() {
-        String query = "select * from patients";
 
-       try {
-           PreparedStatement preparedStatement = connection.prepareStatement(query);
-           ResultSet resultSet = preparedStatement.executeQuery();
-           System.out.println("Patients: ");
-           System.out.println("+-----------+--------------+-----------+------------------+");
-           System.out.println("| Patient Id| Name         | Age       | Gender           |");
-           System.out.println("+-----------+--------------+-----------+------------------+");
-           while(resultSet.next()){
-               int id = resultSet.getInt("id");
-               String name = resultSet.getString("name");
-               int age = resultSet.getInt("age");
-               String gender = resultSet.getString("gender");
-               System.out.printf("|%-11s|%-14s|%-11s|%-18s\n", id , name , age , gender);
-               System.out.println("+-----------+--------------+-----------+------------------+");
-           }
+        String query = "SELECT * FROM patients";
 
-       }catch(SQLException e){
-           e.printStackTrace();
-       }
+        try {
+
+            PreparedStatement preparedStatement =
+                    connection.prepareStatement(query);
+
+            ResultSet resultSet =
+                    preparedStatement.executeQuery();
+
+            boolean found = false;
+
+            System.out.println("\nPatients:");
+            System.out.println("+-----------+--------------+-----------+------------------+");
+            System.out.println("| Patient ID| Name         | Age       | Gender           |");
+            System.out.println("+-----------+--------------+-----------+------------------+");
+
+            while (resultSet.next()) {
+
+                found = true;
+
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                int age = resultSet.getInt("age");
+                String gender = resultSet.getString("gender");
+
+                System.out.printf(
+                        "| %-10d| %-13s| %-10d| %-17s|%n",
+                        id,
+                        name,
+                        age,
+                        gender
+                );
+
+                System.out.println(
+                        "+-----------+--------------+-----------+------------------+"
+                );
+            }
+
+            if (!found) {
+
+                System.out.println("No patients found.");
+
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+
+        }
     }
 
     public void searchPatient(){
-        System.out.println("Enter patient ID");
-        int id = scanner.nextInt();
+
+        int id;
+
+        while (true) {
+
+            System.out.println("Enter patient ID:");
+
+            if (scanner.hasNextInt()) {
+
+                id = scanner.nextInt();
+
+                if (id > 0) {
+                    break;
+                }
+
+                System.out.println("Patient ID must be greater than 0.");
+
+            } else {
+
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+            }
+        }
+
 
         String query = "select * from patients where id = ?";
 
@@ -101,17 +207,92 @@ public class Patient {
 
 
     public void updatePatient(){
-        System.out.println("Enter patient ID");
-        int id = scanner.nextInt();
+        int id;
 
-        System.out.println("Enter new patient name:");
-        String name = scanner.next();
+        while (true) {
 
-        System.out.println("Enter new patient age:");
-        int age = scanner.nextInt();
+            System.out.println("Enter patient ID:");
 
-        System.out.println("Enter new patient gender:");
-        String gender = scanner.next();
+            if (scanner.hasNextInt()) {
+
+                id = scanner.nextInt();
+
+                if (id > 0) {
+                    break;
+                }
+
+                System.out.println("Patient ID must be greater than 0.");
+
+            } else {
+
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+            }
+        }
+
+
+        // Validate Patient Name
+        String name;
+
+        while (true) {
+
+            System.out.println("Enter new patient name:");
+            name = scanner.next();
+
+            if (name.matches("[a-zA-Z]+")) {
+                break;
+            }
+
+            System.out.println("Invalid name. Please enter alphabets only.");
+        }
+
+
+        // Validate Patient Age
+        int age;
+
+        while (true) {
+
+            System.out.println("Enter new patient age:");
+
+            if (scanner.hasNextInt()) {
+
+                age = scanner.nextInt();
+
+                if (age > 0 && age <= 120) {
+                    break;
+                }
+
+                System.out.println(
+                        "Invalid age. Age must be between 1 and 120."
+                );
+
+            } else {
+
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+            }
+        }
+
+
+        // Validate Patient Gender
+        String gender;
+
+        while (true) {
+
+            System.out.println("Enter new patient gender:");
+            gender = scanner.next();
+
+            if (gender.equalsIgnoreCase("Male")
+                    || gender.equalsIgnoreCase("Female")
+                    || gender.equalsIgnoreCase("Other")) {
+
+                break;
+            }
+
+            System.out.println(
+                    "Invalid gender. Please enter Male, Female, or Other."
+            );
+        }
 
         String query = "update patients SET name = ?, age = ? , gender = ? where id = ?";
 
@@ -138,8 +319,29 @@ public class Patient {
     }
 
     public void deletePatient(){
-        System.out.println("Enter patient ID");
-        int id = scanner.nextInt();
+        int id;
+
+        // Validate Patient ID
+        while (true) {
+
+            System.out.println("Enter patient ID:");
+
+            if (scanner.hasNextInt()) {
+
+                id = scanner.nextInt();
+
+                if (id > 0) {
+                    break;
+                }
+
+                System.out.println("Patient ID must be greater than 0.");
+
+            } else {
+
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.next();
+            }
+        }
 
         String query = "delete from patients where id = ?";
 

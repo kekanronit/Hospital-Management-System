@@ -1,10 +1,7 @@
 package Hospitalmanagementsystem;
 
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Scanner;
 
 public class DoctorAvailability {
@@ -63,108 +60,432 @@ public class DoctorAvailability {
 
     }
 
-    public void addAvailability(){
+    public void addAvailability() {
 
-        System.out.println("Enter doctor ID");
-        int doctor_id = scanner.nextInt();
+        // ==============================
+        // 1. Validate Doctor ID
+        // ==============================
 
-        System.out.println("Enter day of week");
-        String day_of_week = scanner.next();
+        int doctorId;
 
-        System.out.println("Enter start time (HH:MM:SS)");
-        String startTime = scanner.next();
+        while (true) {
 
-        System.out.println("Enter end time (HH:MM:SS)");
-        String endTime = scanner.next();
+            System.out.println("Enter doctor ID:");
 
-        String query = """
-                INSERT INTO doctor_availability (doctor_id, day_of_week, start_time, end_time , is_available)     
-                VALUES (? , ? , ? , ? , ?)
-                """;
+            if (scanner.hasNextInt()) {
 
-        try{
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
+                doctorId = scanner.nextInt();
 
-            preparedStatement.setInt(1, doctor_id);
-            preparedStatement.setString(2, day_of_week);
-            preparedStatement.setString(3, startTime);
-            preparedStatement.setString(4, endTime);
-            preparedStatement.setBoolean(5, true);
+                if (doctorId <= 0) {
 
-            int rowAffected = preparedStatement.executeUpdate();
+                    System.out.println(
+                            "Doctor ID must be greater than 0."
+                    );
 
-            if(rowAffected > 0){
-                System.out.println("Doctor  availability has been added");
-            }else{
-                System.out.println("Failed to add availability");
+                    continue;
+                }
+
+                // Check whether doctor exists
+                if (Doctor.getDoctorsById(doctorId, connection)) {
+
+                    break;
+
+                } else {
+
+                    System.out.println("Doctor not found.");
+                }
+
+            } else {
+
+                System.out.println(
+                        "Invalid input. Please enter a number."
+                );
+
+                scanner.next();
+            }
+        }
+
+
+        // ==============================
+        // 2. Validate Day of Week
+        // ==============================
+
+        String dayOfWeek;
+
+        while (true) {
+
+            System.out.println("Enter day of week:");
+
+            dayOfWeek = scanner.next();
+
+            if (dayOfWeek.equalsIgnoreCase("Monday")
+                    || dayOfWeek.equalsIgnoreCase("Tuesday")
+                    || dayOfWeek.equalsIgnoreCase("Wednesday")
+                    || dayOfWeek.equalsIgnoreCase("Thursday")
+                    || dayOfWeek.equalsIgnoreCase("Friday")
+                    || dayOfWeek.equalsIgnoreCase("Saturday")
+                    || dayOfWeek.equalsIgnoreCase("Sunday")) {
+
+                break;
             }
 
-        }catch (SQLException e){
-            e.printStackTrace();
+            System.out.println(
+                    "Invalid day. Please enter a valid day of the week."
+            );
         }
-    }
 
-    public void updateAvailability(){
 
-        System.out.println("Enter availability ID");
-        int availability_id = scanner.nextInt();
+        // ==============================
+        // 3. Validate Start Time
+        // ==============================
 
-        System.out.println("Enter new day of week");
-        String day_of_week = scanner.next();
+        Time startTime;
 
-        System.out.println("Enter new start time (HH:MM:SS)");
-        String startTime = scanner.next();
+        while (true) {
 
-        System.out.println("Enter new end time (HH:MM:SS)");
-        String endTime = scanner.next();
+            System.out.println(
+                    "Enter start time (HH:MM:SS):"
+            );
+
+            String startInput = scanner.next();
+
+            try {
+
+                startTime = Time.valueOf(startInput);
+
+                break;
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Invalid time format. Please use HH:MM:SS."
+                );
+            }
+        }
+
+
+        // ==============================
+        // 4. Validate End Time
+        // ==============================
+
+        Time endTime;
+
+        while (true) {
+
+            System.out.println(
+                    "Enter end time (HH:MM:SS):"
+            );
+
+            String endInput = scanner.next();
+
+            try {
+
+                endTime = Time.valueOf(endInput);
+
+                if (endTime.after(startTime)) {
+
+                    break;
+
+                } else {
+
+                    System.out.println(
+                            "End time must be after start time."
+                    );
+                }
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Invalid time format. Please use HH:MM:SS."
+                );
+            }
+        }
+
+
+        // ==============================
+        // 5. Insert Availability
+        // ==============================
 
         String query = """
-                UPDATE  doctor_availability
-                SET day_of_week = ? , start_time = ? , end_time =?
-                WHERE availability_id = ? ;
-                """;
-
-        try{
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-
-            preparedStatement.setString(1, day_of_week);
-            preparedStatement.setString(2, startTime);
-            preparedStatement.setString(3, endTime);
-            preparedStatement.setInt(4, availability_id);
-
-            int rowsAffected = preparedStatement.executeUpdate();
-
-            if (rowsAffected > 0){
-                System.out.println("Doctor availability has been updated");
-            }else{
-                System.out.println("Failed to update availability");
-            }
-        }catch (SQLException e){
-            e.printStackTrace();
-        }
-    }
-
-    public void deleteAvailability(){
-        System.out.println("Enter availability ID");
-        int availability_id = scanner.nextInt();
-
-        String query = "DELETE FROM  doctor_availability WHERE availability_id = ?;";
+            INSERT INTO doctor_availability
+            (doctor_id, day_of_week, start_time, end_time, is_available)
+            VALUES (?, ?, ?, ?, ?)
+            """;
 
         try {
+
             PreparedStatement preparedStatement =
                     connection.prepareStatement(query);
 
-            preparedStatement.setInt(1, availability_id);
+            preparedStatement.setInt(1, doctorId);
+            preparedStatement.setString(2, dayOfWeek);
+            preparedStatement.setTime(3, startTime);
+            preparedStatement.setTime(4, endTime);
+            preparedStatement.setBoolean(5, true);
 
-            int rowsAffected = preparedStatement.executeUpdate();
+            int rowsAffected =
+                    preparedStatement.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("Doctor availability deleted successfully.");
+
+                System.out.println(
+                        "Doctor availability has been added successfully."
+                );
+
             } else {
-                System.out.println("Availability record not found.");
+
+                System.out.println(
+                        "Failed to add doctor availability."
+                );
             }
 
         } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+    }
+
+    public void updateAvailability() {
+
+        // Validate Availability ID
+        int availabilityId;
+
+        while (true) {
+
+            System.out.println("Enter availability ID:");
+
+            if (scanner.hasNextInt()) {
+
+                availabilityId = scanner.nextInt();
+
+                if (availabilityId > 0) {
+                    break;
+                }
+
+                System.out.println(
+                        "Availability ID must be greater than 0."
+                );
+
+            } else {
+
+                System.out.println(
+                        "Invalid input. Please enter a number."
+                );
+
+                scanner.next();
+            }
+        }
+
+
+        // Check whether availability exists
+        String checkQuery =
+                "SELECT * FROM doctor_availability WHERE availability_id = ?";
+
+        try {
+
+            PreparedStatement checkStatement =
+                    connection.prepareStatement(checkQuery);
+
+            checkStatement.setInt(1, availabilityId);
+
+            ResultSet resultSet =
+                    checkStatement.executeQuery();
+
+            if (!resultSet.next()) {
+
+                System.out.println("Availability record not found.");
+                return;
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+            return;
+        }
+
+
+        // Validate Day
+        String dayOfWeek;
+
+        while (true) {
+
+            System.out.println("Enter new day of week:");
+
+            dayOfWeek = scanner.next();
+
+            if (dayOfWeek.equalsIgnoreCase("Monday")
+                    || dayOfWeek.equalsIgnoreCase("Tuesday")
+                    || dayOfWeek.equalsIgnoreCase("Wednesday")
+                    || dayOfWeek.equalsIgnoreCase("Thursday")
+                    || dayOfWeek.equalsIgnoreCase("Friday")
+                    || dayOfWeek.equalsIgnoreCase("Saturday")
+                    || dayOfWeek.equalsIgnoreCase("Sunday")) {
+
+                break;
+            }
+
+            System.out.println(
+                    "Invalid day. Please enter a valid day of the week."
+            );
+        }
+
+
+        // Validate Start Time
+        Time startTime;
+
+        while (true) {
+
+            System.out.println("Enter new start time (HH:MM:SS):");
+
+            String startInput = scanner.next();
+
+            try {
+
+                startTime = Time.valueOf(startInput);
+                break;
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Invalid time format. Use HH:MM:SS."
+                );
+            }
+        }
+
+
+        // Validate End Time
+        Time endTime;
+
+        while (true) {
+
+            System.out.println("Enter new end time (HH:MM:SS):");
+
+            String endInput = scanner.next();
+
+            try {
+
+                endTime = Time.valueOf(endInput);
+
+                if (endTime.after(startTime)) {
+                    break;
+                }
+
+                System.out.println(
+                        "End time must be after start time."
+                );
+
+            } catch (IllegalArgumentException e) {
+
+                System.out.println(
+                        "Invalid time format. Use HH:MM:SS."
+                );
+            }
+        }
+
+
+        // Update availability
+        String query = """
+            UPDATE doctor_availability
+            SET day_of_week = ?,
+                start_time = ?,
+                end_time = ?
+            WHERE availability_id = ?
+            """;
+
+        try {
+
+            PreparedStatement preparedStatement =
+                    connection.prepareStatement(query);
+
+            preparedStatement.setString(1, dayOfWeek);
+            preparedStatement.setTime(2, startTime);
+            preparedStatement.setTime(3, endTime);
+            preparedStatement.setInt(4, availabilityId);
+
+            int rowsAffected =
+                    preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+
+                System.out.println(
+                        "Doctor availability has been updated successfully."
+                );
+
+            } else {
+
+                System.out.println(
+                        "Failed to update availability."
+                );
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+    }
+
+
+    public void deleteAvailability() {
+
+        int availabilityId;
+
+        // Validate Availability ID
+        while (true) {
+
+            System.out.println("Enter availability ID:");
+
+            if (scanner.hasNextInt()) {
+
+                availabilityId = scanner.nextInt();
+
+                if (availabilityId > 0) {
+                    break;
+                }
+
+                System.out.println(
+                        "Availability ID must be greater than 0."
+                );
+
+            } else {
+
+                System.out.println(
+                        "Invalid input. Please enter a number."
+                );
+
+                scanner.next();
+            }
+        }
+
+
+        // Delete availability
+        String query =
+                "DELETE FROM doctor_availability WHERE availability_id = ?";
+
+        try {
+
+            PreparedStatement preparedStatement =
+                    connection.prepareStatement(query);
+
+            preparedStatement.setInt(1, availabilityId);
+
+            int rowsAffected =
+                    preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+
+                System.out.println(
+                        "Doctor availability deleted successfully."
+                );
+
+            } else {
+
+                System.out.println(
+                        "Availability record not found."
+                );
+            }
+
+        } catch (SQLException e) {
+
             e.printStackTrace();
         }
     }
